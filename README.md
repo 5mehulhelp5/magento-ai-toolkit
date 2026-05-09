@@ -88,6 +88,7 @@ magento-ai-toolkit/
 │   ├── magento-api/SKILL.md
 │   ├── magento-cache/SKILL.md
 │   ├── magento-cli-command/SKILL.md
+│   ├── magento-cron/SKILL.md
 │   ├── magento-db-schema/SKILL.md
 │   ├── magento-debug/SKILL.md
 │   ├── magento-deploy/SKILL.md
@@ -96,6 +97,8 @@ magento-ai-toolkit/
 │   ├── magento-infra/SKILL.md
 │   ├── magento-observer/SKILL.md
 │   ├── magento-plugin/SKILL.md
+│   ├── magento-search/SKILL.md
+│   ├── magento-sql/SKILL.md
 │   └── magento-test/SKILL.md
 ├── agent-skills/                         # Multi-step agent workflows (Agent Skills format)
 │   ├── magento-agent-amqp/SKILL.md
@@ -103,20 +106,26 @@ magento-ai-toolkit/
 │   ├── magento-agent-bug-triage/SKILL.md
 │   ├── magento-agent-cache/SKILL.md
 │   ├── magento-agent-code-review/SKILL.md
+│   ├── magento-agent-cron/SKILL.md
 │   ├── magento-agent-deployment/SKILL.md
 │   ├── magento-agent-indexer/SKILL.md
 │   ├── magento-agent-module-generator/SKILL.md
-│   └── magento-agent-performance-auditor/SKILL.md
+│   ├── magento-agent-performance-auditor/SKILL.md
+│   ├── magento-agent-search/SKILL.md
+│   └── magento-agent-sql/SKILL.md
 ├── subagents/                            # Claude Code native subagents (isolated context)
 │   ├── magento-agent-amqp.md
 │   ├── magento-agent-api-builder.md
 │   ├── magento-agent-bug-triage.md
 │   ├── magento-agent-cache.md
 │   ├── magento-agent-code-review.md
+│   ├── magento-agent-cron.md
 │   ├── magento-agent-deployment.md
 │   ├── magento-agent-indexer.md
 │   ├── magento-agent-module-generator.md
-│   └── magento-agent-performance-auditor.md
+│   ├── magento-agent-performance-auditor.md
+│   ├── magento-agent-search.md
+│   └── magento-agent-sql.md
 ├── snippets/                             # Copy-pasteable XML/PHP stubs
 │   ├── di.xml
 │   ├── routes.xml
@@ -132,12 +141,12 @@ magento-ai-toolkit/
 │   ├── new-module.md
 │   └── pr-review.md
 └── tests/
-    ├── promptfooconfig.yaml              # Root orchestrator (imports all 22 configs)
+    ├── promptfooconfig.yaml              # Root orchestrator (imports all 28 configs)
     ├── providers.yaml                    # Shared: claude-sonnet-4-6 + gpt-4o at temp=0
     ├── prompts/
     │   ├── skill-wrapper.json
     │   └── agent-wrapper.json
-    ├── skills/                           # 13 configs × 5 tests = 65 tests
+    ├── skills/                           # 16 configs × 5 tests = 80 tests
     │   ├── magento-plugin.yaml
     │   ├── magento-db-schema.yaml
     │   ├── magento-debug.yaml
@@ -150,8 +159,11 @@ magento-ai-toolkit/
     │   ├── magento-infra.yaml
     │   ├── magento-indexer.yaml
     │   ├── magento-cache.yaml
-    │   └── magento-amqp.yaml
-    └── agents/                           # 9 configs × 5 tests = 45 tests
+    │   ├── magento-amqp.yaml
+    │   ├── magento-sql.yaml
+    │   ├── magento-search.yaml
+    │   └── magento-cron.yaml
+    └── agents/                           # 12 configs × 5 tests = 60 tests
         ├── magento-bug-triage.yaml
         ├── magento-code-review.yaml
         ├── magento-deployment.yaml
@@ -160,7 +172,10 @@ magento-ai-toolkit/
         ├── magento-module-generator.yaml
         ├── magento-indexer.yaml
         ├── magento-cache.yaml
-        └── magento-amqp.yaml
+        ├── magento-amqp.yaml
+        ├── magento-sql.yaml
+        ├── magento-search.yaml
+        └── magento-cron.yaml
 ```
 
 ---
@@ -186,6 +201,9 @@ These follow the [Agent Skills open standard](https://agentskills.io) — compat
 | [`magento-indexer`](skills/magento-indexer/SKILL.md) | Custom indexers — `indexer.xml`, `mview.xml`, `ActionInterface`, batch reindex, schedule vs realtime |
 | [`magento-cache`](skills/magento-cache/SKILL.md) | Custom cache types with `TagScope`, tag vs type invalidation, FPC rules, customer-data sections |
 | [`magento-amqp`](skills/magento-amqp/SKILL.md) | Message queues — RabbitMQ, AmazonMQ, DB adapter, all four XML configs, publishers, consumers |
+| [`magento-sql`](skills/magento-sql/SKILL.md) | SQL in Magento — Select builder, batch ops, deadlock retry, EXPLAIN reading, composite indexes, `db_schema.xml`, MySQL 8 / MariaDB feature matrix, online DDL |
+| [`magento-search`](skills/magento-search/SKILL.md) | Catalog search — ES 7/8/OpenSearch engine matrix, env.php per provider, searchable attributes, relevance tuning, disk watermark, migration paths |
+| [`magento-cron`](skills/magento-cron/SKILL.md) | Cron jobs — `crontab.xml`, `cron_groups.xml`, `cron_schedule` lifecycle, consumer runner, distributed cron, Adobe Commerce Cloud `crons:` |
 
 ---
 
@@ -206,6 +224,9 @@ These also follow the [Agent Skills open standard](https://agentskills.io) — t
 | [`magento-agent-indexer`](agent-skills/magento-agent-indexer/SKILL.md) | Diagnose invalid / stuck / slow indexers, mview triggering issues; or scaffold a custom indexer end-to-end | Run bash, read files, write files |
 | [`magento-agent-cache`](agent-skills/magento-agent-cache/SKILL.md) | Trace FPC bypass, Redis pressure, stale block / tag invalidation; or scaffold a custom cache type with invalidation | Run bash, read files, write files |
 | [`magento-agent-amqp`](agent-skills/magento-agent-amqp/SKILL.md) | Diagnose queue backlog, stuck / killed consumers, AMQP connectivity, DLQ overflow; or scaffold a complete queue topology end-to-end | Run bash, read files, write files |
+| [`magento-agent-sql`](agent-skills/magento-agent-sql/SKILL.md) | Diagnose slow queries, missing indexes, deadlocks, N+1 patterns; assess online-DDL feasibility per engine; propose `db_schema.xml` changes | Run bash, read files |
+| [`magento-agent-search`](agent-skills/magento-agent-search/SKILL.md) | Diagnose missing products, zero results, wrong relevance, cluster red/yellow, disk-watermark read-only, stuck reindex; advise on migration paths | Run bash, read files |
+| [`magento-agent-cron`](agent-skills/magento-agent-cron/SKILL.md) | Diagnose jobs not running, pending→missed, error spikes, stuck running rows, `cron_schedule` bloat, consumer-runner failures; scaffold new cron jobs | Run bash, read files |
 
 ---
 
@@ -220,10 +241,13 @@ subagents/
 ├── magento-agent-bug-triage.md        # auto-delegated for debugging/error analysis
 ├── magento-agent-cache.md             # auto-delegated for cache / FPC / Redis investigations
 ├── magento-agent-code-review.md       # auto-delegated for code review requests
+├── magento-agent-cron.md              # auto-delegated for cron diagnosis, tuning, and scaffold
 ├── magento-agent-deployment.md        # auto-delegated for deployment tasks
 ├── magento-agent-indexer.md           # auto-delegated for indexer / mview diagnosis and scaffolding
 ├── magento-agent-module-generator.md  # auto-delegated for module scaffolding
-└── magento-agent-performance-auditor.md  # auto-delegated for performance audits
+├── magento-agent-performance-auditor.md  # auto-delegated for performance audits
+├── magento-agent-search.md            # auto-delegated for catalog search and OpenSearch/ES diagnosis
+└── magento-agent-sql.md               # auto-delegated for slow queries, index design, schema changes
 ```
 
 These are equivalent in content to the agent-skills but formatted for Claude Code's native agent system. Install both if you want cross-CLI compatibility (agent-skills) **and** Claude's native auto-delegation (subagents).
@@ -252,6 +276,16 @@ These are equivalent in content to the agent-skills but formatted for Claude Cod
 | "Queue backlog growing / consumer not draining" | Agent skill / Subagent: `magento-agent-amqp` |
 | "Consumer keeps crashing / hitting OOM" | Agent skill / Subagent: `magento-agent-amqp` |
 | "AmazonMQ / RabbitMQ connection errors" | Agent skill / Subagent: `magento-agent-amqp` |
+| "Optimise a slow query / missing index" | Skill: `magento-sql` or Agent skill: `magento-agent-sql` |
+| "Diagnose deadlock / N+1 / slow EXPLAIN" | Agent skill / Subagent: `magento-agent-sql` |
+| "Add a column / index via db_schema.xml" | Skill: `magento-sql` |
+| "Configure Elasticsearch / OpenSearch" | Skill: `magento-search` |
+| "Product missing from search or category" | Agent skill / Subagent: `magento-agent-search` |
+| "ES 7 → ES 8 or OpenSearch migration" | Agent skill / Subagent: `magento-agent-search` |
+| "Cluster red / disk watermark read-only" | Agent skill / Subagent: `magento-agent-search` |
+| "Schedule a background cron job" | Skill: `magento-cron` or Agent skill: `magento-agent-cron` |
+| "Cron jobs not running / pending → missed" | Agent skill / Subagent: `magento-agent-cron` |
+| "cron_schedule bloat / consumer runner not draining" | Agent skill / Subagent: `magento-agent-cron` |
 
 | Format | Best for | Tool use? | Context |
 |--------|----------|-----------|---------|
@@ -276,6 +310,9 @@ Each agent skill lists **companion skills** — skills that cover overlapping re
 | `magento-agent-indexer` | `magento-indexer` |
 | `magento-agent-cache` | `magento-cache`, `magento-infra` |
 | `magento-agent-amqp` | `magento-amqp`, `magento-infra` |
+| `magento-agent-sql` | `magento-sql`, `magento-db-schema` |
+| `magento-agent-search` | `magento-search`, `magento-indexer`, `magento-infra` |
+| `magento-agent-cron` | `magento-cron`, `magento-cli-command`, `magento-infra` |
 
 ---
 
@@ -348,7 +385,7 @@ Human-run workflow gates in `checklists/`. Use these at key project milestones �
 
 ## Testing
 
-The test suite uses [promptfoo](https://promptfoo.dev) to validate all 22 skills and agent skills against Claude and GPT-4o. 110 test cases × 2 providers = ~220 API calls per full run.
+The test suite uses [promptfoo](https://promptfoo.dev) to validate all 28 skills and agent skills against Claude and GPT-4o. 140 test cases × 2 providers = ~280 API calls per full run.
 
 ### Prerequisites
 
@@ -361,12 +398,12 @@ OPENAI_API_KEY=...    # optional — omit to run single-provider with Claude onl
 ### Run commands
 
 ```bash
-# All 110 cases, both providers (~220 API calls)
+# All 140 cases, both providers (~280 API calls)
 npm test
 
 # By category
-npm run test:skills           # all 13 skill configs
-npm run test:agents           # all 9 agent skill configs
+npm run test:skills           # all 16 skill configs
+npm run test:agents           # all 12 agent skill configs
 
 # Per-file (fast iteration during authoring)
 npm run test:plugin
@@ -388,9 +425,15 @@ npm run test:module-generator
 npm run test:indexer
 npm run test:cache
 npm run test:amqp
+npm run test:sql
+npm run test:search
+npm run test:cron
 npm run test:agent-indexer
 npm run test:agent-cache
 npm run test:agent-amqp
+npm run test:agent-sql
+npm run test:agent-search
+npm run test:agent-cron
 
 # CI / reporting
 npm run test:ci               # outputs results-skills.json + results-agents.json
@@ -434,6 +477,12 @@ Non-negotiable assertions enforced on every test in a config via `defaultTest`:
 | `magento-agent-indexer` | `## Indexer Report` always present; `rm -rf generated` never appears |
 | `magento-agent-cache` | `## Cache Report` always present |
 | `magento-agent-amqp` | `## AMQP Report` always present; `ObjectManager::getInstance` never appears; all four queue XML files referenced in scaffold responses |
+| `magento-sql` | `ObjectManager::getInstance` never appears; `db_schema.xml` referenced for schema changes |
+| `magento-search` | `## Search Report` never produced (skill, not agent); `enable_auth => 0` never recommended for ES 8 |
+| `magento-cron` | `ObjectManager::getInstance` never appears; `TRUNCATE cron_schedule` never recommended |
+| `magento-agent-sql` | `## SQL Report` always present; `ALTER TABLE` not proposed as persistent change; `vendor/` edits refused |
+| `magento-agent-search` | `## Search Report` always present; `enable_auth => 0` for ES 8 refused; disk freed before block cleared |
+| `magento-agent-cron` | `## Cron Report` always present; `TRUNCATE cron_schedule` refused; `cron:install` not recommended on Cloud |
 
 ---
 
